@@ -65,7 +65,12 @@ def show_indexed_image(index_matrix, palette):
     plt.show()
 
 
-def matrix_to_2bpp(matrix):
+def matrix_to_bpp(matrix, bpp):
+    if bpp > 2:
+        high = matrix_to_bpp(matrix >> (bpp//2), bpp // 2)
+        low = matrix_to_bpp(matrix & (bpp - 1), bpp // 2)
+        return np.concatenate((high, low))
+
     bin = 2 ** np.arange(matrix.shape[1] - 1, -1, -1)
     msb = (matrix >> 1) @ bin
     lsb = (matrix & 1) @ bin
@@ -86,27 +91,36 @@ def color24bit_to_rgb555(v):
     )
 def main():
     if len(sys.argv) != 4:
-        print("Usage: script.py <image_path> <num_colors> <max_size>")
+        print("Usage: script.py <image_path> <bpp> <size_tiles>")
         sys.exit(1)
 
     image_path = sys.argv[1]
-    k = int(sys.argv[2])
-    max_size = int(sys.argv[3])
+    bpp = int(sys.argv[2])
+    if bpp not in {2, 4, 8}:
+        print(f"incompatible {bpp}bpp mode. (either 2bpp, 4bpp or 8bpp are allowed)")
+        sys.exit(1)
+
+    size_tiles = int(sys.argv[3])
 
     img = Image.open(image_path).convert("RGB")
-    img = resize_image(img, max_size)
+    img = resize_image(img, size_tiles * 8)
 
-    index_matrix, palette = quantize_to_indices(img, k)
+    index_matrix, palette = quantize_to_indices(img, 2 ** bpp)
+    index_matrix = expand_matrix_to_square(index_matrix)
 
-    expand_matrix_to_square(index_matrix)
+    w, h = index_matrix.shape
+    blocks = index_matrix.reshape(w//8, 8, h//8, 8).swapaxes(1, 2).reshape(-1, 8, 8)
 
-    # Print results (or you can process further)
+
     palette_rgb555 = color24bit_to_rgb555(palette)
-    index_mat_2bpp = matrix_to_2bpp(index_matrix)
     with open("sprite.asm", "w") as f:
-        burn_matrix(f, index_mat_2bpp.reshape(-1, 4), "Sprite")
-        f.write("\n")
-        burn_matrix(f, palette_rgb555.reshape(1, -1), "Palette", size="word")
+        f.write("Sprite:\n\n")
+        for i, block in enumerate(blocks):
+            block_bpp = matrix_to_bpp(block, bpp)
+            burn_matrix(f, block_bpp.reshape(-1, 4), f"Sprite{bpp}BppPart{i}")
+            f.write("\n")
+        f.write("SpriteEnd:\n\n")
+        burn_matrix(f, palette_rgb555.reshape(1, -1), f"Palette", size="word")
 
 if __name__ == "__main__":
     main()
