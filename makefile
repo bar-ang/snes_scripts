@@ -13,7 +13,7 @@ LDFLAGS := -C memmap.cfg
 BUILDDIR := build
 
 # Files
-SRC := $(TARGET).asm
+SRCS := $(wildcard *.asm)
 OBJ := $(BUILDDIR)/$(TARGET).o
 OUT := $(BUILDDIR)/$(TARGET).smc
 
@@ -24,9 +24,9 @@ all: $(OUT)
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
-# Assemble
-$(OBJ): $(SRC) | $(BUILDDIR)
-	$(AS) $(ASFLAGS) -o $@ $<
+# Assemble (main file only, but depend on ALL asm files)
+$(OBJ): $(SRCS) | $(BUILDDIR)
+	$(AS) $(ASFLAGS) -o $@ $(TARGET).asm
 
 # Link
 $(OUT): $(OBJ)
