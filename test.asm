@@ -99,8 +99,6 @@ CGRAMLoop:
         cpx #(PaletteEnd-Palette); check whether 32/$20 bytes were transfered
         bcc CGRAMLoop           ; if not, continue loop
 
-        .byte $42, $00          ; debugger breakpoint
-
         ; set up OAM data              
         stz OAMADDL             ; set the OAM address to ...
         stz OAMADDH             ; ...at $0000
