@@ -51,6 +51,11 @@ def quantize_to_indices(img, k):
 
     index_matrix = labels.reshape((h, w))
 
+    shift = index_matrix[0][0]
+    palette = np.roll(palette, -shift, axis=0)
+    index_matrix -= shift
+    index_matrix %= k
+
     return index_matrix, palette
 
 def show_indexed_image(index_matrix, palette):
