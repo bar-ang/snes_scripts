@@ -82,7 +82,7 @@ VRAMLoop:
         lda Sprite, X           ; get bitplane 1/3 byte from the sprite data
         sta VMDATAH             ; write the byte in A to VRAM
         inx                     ; increment counter/offset
-        cpx SpriteEnd-Sprite    ; check whether we have written $04 * $20 = $80 bytes to VRAM (four sprites)
+        cpx #(SpriteEnd-Sprite) ; check whether we have written $04 * $20 = $80 bytes to VRAM (four sprites)
         bcc VRAMLoop            ; if X is smaller than SpriteEnd, continue the loop
 
         ; transfer CGRAM data
@@ -96,7 +96,7 @@ CGRAMLoop:
         lda Palette, X          ; get the color high byte
         sta CGDATA              ; store it in CGRAM
         inx                     ; increase counter/offset
-        cpx PaletteEnd-Palette  ; check whether 32/$20 bytes were transfered
+        cpx #(PaletteEnd-Palette); check whether 32/$20 bytes were transfered
         bcc CGRAMLoop           ; if not, continue loop
 
         .byte $42, $00          ; debugger breakpoint
