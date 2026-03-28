@@ -44,6 +44,37 @@ RDNMI       = $4210     ; read the NMI flag status
         lda #$80
         sta VMAINC              ; increment VRAM address by 1 when writing to VMDATAH
         ldx #$00                ; set register X to zero, we will use X as a loop counter and offset
+
+        stz VMADDL
+        stz VMADDH
+        lda #$80
+        sta VMAINC
+        ldx #$0000
+
+        .i16
+        rep #$10
+ClearVRAM:
+        stz VMDATAL
+        inx
+        stz VMDATAH
+        inx
+        cpx #$8000
+        bcc ClearVRAM
+
+        ldx #$0000
+ClearCGRAM:
+        stz CGDATA
+        inx
+        cpx #$200
+        bcc ClearCGRAM
+
+        stz VMADDL
+        stz VMADDH
+        lda #$80
+        sta VMAINC
+        ldx #$0000
+
+
 VRAMLoop:
         lda Sprite, X           ; get bitplane 0/2 byte from the sprite data
         sta VMDATAL             ; write the byte in A to VRAM
